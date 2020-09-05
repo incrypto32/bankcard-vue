@@ -8,27 +8,22 @@ const vuexSessionStorage = new VuexPersistence({
   storage: window.sessionStorage, // or window.sessionStorage or localForage
   reducer: (state) => ({
     keepThisModule: state.user,
-    // getRidOfThisModule: state.getRidOfThisModule (No one likes it.)
   }),
 });
 export default new Vuex.Store({
-  plugins: [vuexSessionStorage.plugin],
+ 
   state: {
-    user: {},
+
   },
   getters: {
-    getUser: (state) => state.user,
+
   },
 
-  mutations: {},
+  mutations: {
+   
+  },
   actions: {
-    setUser(state, user) {
-      console.log("setUser Called");
-      console.log(user.email);
-      state.user = user;
-      console.log(`email is ${state.user.email}`);
-      console.log(`user is ${this.getters.getUser}`);
-    },
+  
   },
   modules: {},
 });

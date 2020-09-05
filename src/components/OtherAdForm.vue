@@ -2,23 +2,24 @@
   <div class="ml-auto">
     <b-modal id="my-modal" cancel-disabled ok-disabled hide-footer>
       <b-form @submit="onSubmit" @reset="onReset" v-if="show">
-        <b-form-group id="input-group-1" label="Bank:" label-for="input-1">
-          <b-form-input
-            id="input-1"
-            v-model="form.bank"
-            type="text"
-            required
-            placeholder="Enter Bank Name"
-          ></b-form-input>
-        </b-form-group>
 
-        <b-form-group id="input-group-3" label="Country:" label-for="input-3">
+        <b-form-group  id="input-group-3" label="Bank :" label-for="input-3">
           <b-form-select
             id="input-3"
-            v-model="form.country"
-            :options="countries"
+            v-model="form.name"
+            :options="banks"
             required
           ></b-form-select>
+        </b-form-group>
+
+        <b-form-group id="input-group-3" label="Ad Name :" label-for="input-3">
+           <b-form-input
+            id="input-1"
+            v-model="form.name"
+            type="text"
+            required
+            placeholder="Enter Ad Name"
+          ></b-form-input>
         </b-form-group>
 
         <b-form-file
@@ -52,14 +53,24 @@
 <script>
 
 import {countries} from '../js/constants'
-import { firebase,banksCollection, cachingDoc,storage } from '../js/firebase';
+import { firebase,banksCollection,metaDataCollection, cachingDoc,storage, bankAdsCollection, otherAdsCollection } from '../js/firebase';
 export default {
+  created(){
+    banksCollection.get().then((snap)=>{
+      snap.forEach((doc)=>{
+        this.banks.push(doc.data().bank)
+      })
+      console.log(this.banks)
+    })
+  },
+  props:['isBankAd'],
   data() {
     return {
       form: {
-        bank: "",
-        country: "",
+        name: "",
+     
       },
+      banks:[],
       file: null,
       countries:countries,
       show: true,
@@ -72,12 +83,15 @@ export default {
     async onSubmit(evt) {
       console.log("submitting");
       evt.preventDefault();
-      if (this.form.bank && this.form.country) {
+      if (this.form.name ) {
+        console.log(this.form)
         if (this.file) {
-
+          console.log("file exists");
+          var n;
+        
           var thisRef = storage
-            .ref("bankcardgen")
-            .child(this.form.bank.toLowerCase().replace(/\s/g, "") + ".png");
+            .ref("random_ads")
+            .child(this.form.name.toLowerCase().replace(/\s/g, "") + ".png");
 
           var uploadTask = thisRef.put(this.file);
 
@@ -93,13 +107,14 @@ export default {
             // Fires When upload is unsuccessfull
 
             (err) => {
+              console.log(err);
               this.err = "Upload error occured check network";
             },
 
             // Fires on upload success
             () => {
               console.log("Completed");
-             banksCollection
+            otherAdsCollection
                 .add(this.form)
                 .then(async (v) => {
                   
@@ -122,8 +137,7 @@ export default {
       console.log("reset");
       if(evt)evt.preventDefault();
       // Reset our form values
-      this.form.bank = "";
-      this.form.country = "";
+      this.form.name = "";
       this.file=null
       this.err = null;
       this.uploadProgress = null;

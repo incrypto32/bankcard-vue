@@ -23,18 +23,9 @@
   </div>
 </template>
 <script>
-import * as firebase from "firebase/app";
-import "firebase/auth";
-const auth = firebase.auth();
+import { auth } from '../js/firebase';
+
 export default {
-  //  beforeCreate ()  {
-  // console.log(auth.currentUser);
-  // auth.onAuthStateChanged((user)=>{
-  //   if(user){
-  //     this.$router.replace({name:'home'})
-  //   }
-  // })
-  // },
   methods: {
     async pressed() {
       this.isLoading = true;

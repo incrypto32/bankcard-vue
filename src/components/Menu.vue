@@ -1,6 +1,6 @@
 <template>
      <div class="content">
-         <div v-for="item in menuList" :key="item" >
+         <div v-for="item in menuList" :key="item.name" >
              <router-link :to="item.route" tag="div" class= "item">{{item.name||item.route ||item}}</router-link>
              
              </div>

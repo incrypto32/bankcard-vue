@@ -1,6 +1,6 @@
 <template>
  <div class="mt-3">
-   <div class="head-bar p-3 mx-2 row"><h2>Banks</h2>  <bank-form-vue /></div>
+   <div class="head-bar p-3 mx-2 row"><h2>Bank Ads</h2>  <bank-form-vue /></div>
     
     <b-table
       striped
@@ -21,18 +21,13 @@
         {{ data.index + 1 }}
       </template>
 
-      <!-- A custom formatted column -->
-      <template v-slot:cell(bank)="data">
-        {{ data.value }}
-      </template>
+     
 
       <!-- A virtual composite column -->
-      <template v-slot:cell(country)="data">
-        {{ data.value }}
-      </template>
+   
 
-      <template v-slot:cell(url)="data">
-        <center><img :src="data.value" class="img-fluid" alt="" /></center>
+      <template v-slot:cell(ad)="data">
+        <center><img :src="data.item.url" class="img-fluid" alt="" /></center>
       </template>
       <!-- <template v-slot:cell(ad)="data">
         <bank-ad-dialog :bank="data.item.bank"></bank-ad-dialog>
@@ -51,21 +46,21 @@
 import Vue from "vue";
 
 
-import BankFormVue from '../components/BankForm.vue';
-import { banksCollection, db,storage } from '../js/firebase';
+import BankAdFormVue from '../components/BankAdForm.vue';
+import { bankAdsCollection, banksCollection, db,storage } from '../js/firebase';
 import BankAdDialogVue from '../components/BankAdDialog.vue';
 
 export default {
   name: "TableTemplate",
   created() {
-    banksCollection.onSnapshot((snap) => {
+    bankAdsCollection.onSnapshot((snap) => {
       var banks = [];
       if (!snap.empty) {
         snap.forEach(async (doc) => {
           this.isBusy=false
           var data = doc.data();
           data.id = doc.id;
-          var pathReference = `/bankcardgen/${data.bank
+          var pathReference = `/bank_ads/${data.name
             .toLowerCase()
             .replace(/\s/g, "")}`;
           await storage
@@ -83,7 +78,7 @@ export default {
   },
   components: {
     
-    "bank-form-vue":BankFormVue,
+    "bank-form-vue":BankAdFormVue,
     "bank-ad-dialog":BankAdDialogVue
   },
   data: () => ({
@@ -91,12 +86,11 @@ export default {
       // A virtual column that doesn't exist in items
       { key: "index" },
       // A column that needs custom formatting
-      { key: "bank", sortable: true },
+      { key: "name", sortable: true },
       // A regular column
-      { key: "country", sortable: true },
       // A regular column
-      { key: "url" },
-      { key: "ad" }
+      { key: "ad" },
+  
     ],
     banks: [],
     showDialog: null,
