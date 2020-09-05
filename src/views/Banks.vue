@@ -30,7 +30,18 @@
       <template v-slot:cell(country)="data">
         {{ data.value }}
       </template>
-
+ <template v-slot:cell(delete)="data">
+        <center>
+          <button
+            class="btn btn-danger"
+            v-b-modal.deleteModal
+            v-on:click="deleteFunc(data.item)"
+          >
+           <div v-if="deleting"><b-spinner variant="primary" label="Spinning"></b-spinner>
+</div>  <div v-else>delete</div>
+          </button>
+        </center>
+      </template>
       <template v-slot:cell(url)="data">
         <center><img :src="data.value" class="img-fluid" alt="" /></center>
       </template>
@@ -52,7 +63,7 @@ import Vue from "vue";
 
 
 import BankFormVue from '../components/BankForm.vue';
-import { banksCollection, db,storage } from '../js/firebase';
+import { banksCollection, db,storage, updateTimestamp } from '../js/firebase';
 import BankAdDialogVue from '../components/BankAdDialog.vue';
 
 export default {
@@ -73,6 +84,8 @@ export default {
             .getDownloadURL()
             .then((url) => {
               data.url = url ?? "";
+            }).catch((e)=>{
+              console.log(e)
             });
           console.log(JSON.stringify(data));
           banks.push(data);
@@ -96,11 +109,14 @@ export default {
       { key: "country", sortable: true },
       // A regular column
       { key: "url" },
-      { key: "ad" }
+      { key: "ad" },
+      { key: "delete" }
     ],
     banks: [],
     showDialog: null,
     isBusy:true,
+    deleted:false,
+    deleting:false,
   }),
   methods: {
     setBanks(banks) {
@@ -108,8 +124,40 @@ export default {
     },
     rowListener(){
       console.log("Clicked Row");
-    }
+    },
+    deleteFunc(item) {
+       this.deleting=true
+      console.log(JSON.stringify(item));
+      banksCollection
+        .doc(item.id)
+        .delete()
+        .then(() => {
+          storage
+            .ref("bankcardgen")
+            .child(item.bank.toLowerCase().replace(/\s/g, "")+".png")
+            .delete()
+            .then(() => {
+              updateTimestamp()
+              console.log(
+                `deleted ${item.bank
+                  .toLowerCase()
+                  .replace(/\s/g, "")+".png"} from storage`
+              );
+              this.deleting=false
+            })
+            .catch((e) => {
+              this.deleting=false
+              console.log(e);
+            });
+        })
+        .catch((e) => {
+          this.deleting=false
+          console.log(e);
+        });
+    },
   },
+  
+  
 };
 </script>
 <style lang="scss" scoped>

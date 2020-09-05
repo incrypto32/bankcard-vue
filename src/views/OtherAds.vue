@@ -1,6 +1,6 @@
 <template>
  <div class="mt-3">
-   <div class="head-bar p-3 mx-2 row"><h2>Other Ads</h2>  <other-form-vue /></div>
+   <div class="head-bar p-3 mx-2 row"><h2>Other Ads</h2>  <other-form-vue :isBankAd="false"/></div>
     
     <b-table
       striped
@@ -29,6 +29,18 @@
       <template v-slot:cell(ad)="data">
         <center><img :src="data.item.url" class="img-fluid" alt="" /></center>
       </template>
+      <template v-slot:cell(delete)="data">
+        <center>
+          <button
+            class="btn btn-danger"
+            v-b-modal.deleteModal
+            v-on:click="deleteFunc(data.item)"
+          >
+           <div v-if="deleting"><b-spinner variant="primary" label="Spinning"></b-spinner>
+</div>  <div v-else>delete</div>
+          </button>
+        </center>
+      </template>
       <!-- <template v-slot:cell(ad)="data">
         <bank-ad-dialog :bank="data.item.bank"></bank-ad-dialog>
       </template> -->
@@ -47,7 +59,7 @@ import Vue from "vue";
 
 
 import OtherAdFormVue from '../components/OtherAdForm.vue';
-import { bankAdsCollection, banksCollection, db,otherAdsCollection,storage } from '../js/firebase';
+import { bankAdsCollection, banksCollection, db,metaDataCollection,otherAdsCollection,storage, updateTimestamp } from '../js/firebase';
 
 
 export default {
@@ -73,6 +85,8 @@ export default {
           banks.push(data);
         });
         this.banks=banks
+      }else{
+        this.banks=[]
       }
     });
   },
@@ -90,10 +104,12 @@ export default {
       // A regular column
       // A regular column
       { key: "ad" },
+       { key: "delete" },
   
     ],
     banks: [],
     showDialog: null,
+    deleting:false,
     isBusy:true,
   }),
   methods: {
@@ -102,8 +118,39 @@ export default {
     },
     rowListener(){
       console.log("Clicked Row");
-    }
+    },
+     deleteFunc(item) {
+       this.deleting=true
+      console.log(JSON.stringify(item));
+      otherAdsCollection
+        .doc(item.id)
+        .delete()
+        .then(() => {
+          storage
+            .ref("random_ads")
+            .child(item.name.toLowerCase().replace(/\s/g, "")+".png")
+            .delete()
+            .then(() => {
+              updateTimestamp()
+              console.log(
+                `deleted ${item.name
+                  .toLowerCase()
+                  .replace(/\s/g, "")+".png"} from storage`
+              );
+              this.deleting=false
+            })
+            .catch((e) => {
+              this.deleting=false
+              console.log(e);
+            });
+        })
+        .catch((e) => {
+          this.deleting=false
+          console.log(e);
+        });
+    },
   },
+ 
 };
 </script>
 <style lang="scss" scoped>

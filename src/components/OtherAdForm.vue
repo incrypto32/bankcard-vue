@@ -2,18 +2,27 @@
   <div class="ml-auto">
     <b-modal id="my-modal" cancel-disabled ok-disabled hide-footer>
       <b-form @submit="onSubmit" @reset="onReset" v-if="show">
-
-        <b-form-group  id="input-group-3" label="Bank :" label-for="input-3">
+        <b-form-group
+          v-if="isBankAd"
+          id="input-group-1"
+          label="Bank :"
+          label-for="input-1"
+        >
           <b-form-select
-            id="input-3"
+            id="input-1"
             v-model="form.name"
             :options="banks"
             required
           ></b-form-select>
         </b-form-group>
 
-        <b-form-group id="input-group-3" label="Ad Name :" label-for="input-3">
-           <b-form-input
+        <b-form-group
+          v-else
+          id="input-group-2"
+          label="Ad Name :"
+          label-for="input-2"
+        >
+          <b-form-input
             id="input-1"
             v-model="form.name"
             type="text"
@@ -30,6 +39,7 @@
           required
           accept="image/png"
         ></b-form-file>
+
         <div class="mt-3">Selected file: {{ file ? file.name : "" }}</div>
         <b-progress
           :value="uploadProgress"
@@ -40,7 +50,9 @@
 
         <div class="err my-2 text-center text-white bg-danger">{{ err }}</div>
         <div class="err my-2 text-center text-white bg-success">{{ err }}</div>
+
         <hr />
+
         <b-button type="submit" variant="primary" class="mx-2">Submit</b-button>
         <b-button type="reset" variant="danger" class="mx-2">Reset</b-button>
       </b-form>
@@ -51,28 +63,34 @@
 </template>
 
 <script>
-
-import {countries} from '../js/constants'
-import { firebase,banksCollection,metaDataCollection, cachingDoc,storage, bankAdsCollection, otherAdsCollection } from '../js/firebase';
+import {
+  firebase,
+  banksCollection,
+  metaDataCollection,
+  cachingDoc,
+  storage,
+  bankAdsCollection,
+  otherAdsCollection,
+} from "../js/firebase";
 export default {
-  created(){
-    banksCollection.get().then((snap)=>{
-      snap.forEach((doc)=>{
-        this.banks.push(doc.data().bank)
-      })
-      console.log(this.banks)
-    })
+  created() {
+    if (this.isBankAd) {
+      banksCollection.get().then((snap) => {
+        snap.forEach((doc) => {
+          this.banks.push(doc.data().bank);
+        });
+        console.log(this.banks);
+      });
+    }
   },
-  props:['isBankAd'],
+  props: ["isBankAd"],
   data() {
     return {
       form: {
         name: "",
-     
       },
-      banks:[],
+      banks: [],
       file: null,
-      countries:countries,
       show: true,
       err: null,
       success: null,
@@ -81,21 +99,25 @@ export default {
   },
   methods: {
     async onSubmit(evt) {
-      console.log("submitting");
+      console.log("___Submitting____");
+      var ref;
+      if (this.isBankAd) {
+        ref = "bank_ads";
+      } else {
+        ref = "random_ads";
+      }
+
       evt.preventDefault();
-      if (this.form.name ) {
-        console.log(this.form)
+
+      if (this.form.name) {
         if (this.file) {
-          console.log("file exists");
-          var n;
-        
           var thisRef = storage
-            .ref("random_ads")
+            .ref(ref)
             .child(this.form.name.toLowerCase().replace(/\s/g, "") + ".png");
 
           var uploadTask = thisRef.put(this.file);
 
-         // Fires on each upload snapshots
+          // Fires on each upload snapshots
           uploadTask.on(
             "state_changed",
             (snapshot) => {
@@ -114,18 +136,17 @@ export default {
             // Fires on upload success
             () => {
               console.log("Completed");
-            otherAdsCollection
-                .add(this.form)
-                .then(async (v) => {
-                  
-                  var ts = await cachingDoc.update({lud:firebase.firestore.FieldValue.serverTimestamp()}).catch((e)=>console.log(e))
-                  this.onReset();
-                  this.success = "Bank Created Successfully";
-                });
+              otherAdsCollection.add(this.form).then(async (v) => {
+                var ts = await cachingDoc
+                  .update({
+                    lud: firebase.firestore.FieldValue.serverTimestamp(),
+                  })
+                  .catch((e) => console.log(e));
+                this.onReset();
+                this.success = "Bank Created Successfully";
+              });
             }
           );
-
-          
         } else {
           this.err = "Error please try again";
         }
@@ -135,10 +156,10 @@ export default {
     },
     onReset(evt) {
       console.log("reset");
-      if(evt)evt.preventDefault();
+      if (evt) evt.preventDefault();
       // Reset our form values
       this.form.name = "";
-      this.file=null
+      this.file = null;
       this.err = null;
       this.uploadProgress = null;
       // Trick to reset/clear native browser form validation state
