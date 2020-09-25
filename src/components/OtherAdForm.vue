@@ -2,6 +2,7 @@
   <div class="ml-auto">
     <b-modal id="my-modal" cancel-disabled ok-disabled hide-footer>
       <b-form @submit="onSubmit" @reset="onReset" v-if="show">
+
         <b-form-group
           v-if="isBankAd"
           id="input-group-1"
@@ -73,8 +74,10 @@ import {
   otherAdsCollection,
 } from "../js/firebase";
 export default {
+
   created() {
     if (this.isBankAd) {
+      console.log("Created Called")
       banksCollection.get().then((snap) => {
         snap.forEach((doc) => {
           this.banks.push(doc.data().bank);
@@ -100,11 +103,14 @@ export default {
   methods: {
     async onSubmit(evt) {
       console.log("___Submitting____");
+      var collection;
       var ref;
       if (this.isBankAd) {
         ref = "bank_ads";
+        collection=bankAdsCollection
       } else {
         ref = "random_ads";
+        collection=otherAdsCollection
       }
 
       evt.preventDefault();
@@ -136,7 +142,7 @@ export default {
             // Fires on upload success
             () => {
               console.log("Completed");
-              otherAdsCollection.add(this.form).then(async (v) => {
+              collection.add(this.form).then(async (v) => {
                 var ts = await cachingDoc
                   .update({
                     lud: firebase.firestore.FieldValue.serverTimestamp(),

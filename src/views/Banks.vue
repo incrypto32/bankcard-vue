@@ -1,54 +1,44 @@
 <template>
- <div class="mt-3">
-   <div class="head-bar p-3 mx-2 row"><h2>Banks</h2>  <bank-form-vue /></div>
-    
+  <div class="mt-3"> 
+    <div class="head-bar p-3 mx-2 row">
+      <h2>Banks</h2>
+      <bank-form-vue />
+    </div>
+
     <b-table
       striped
       hover
       sort-icon-center
-      sort-des
       :busy="isBusy"
       :fields="fields"
       :items="banks"
       responsive="sm"
     >
-  
       <template v-slot:head()="data">
         <div class="table-header">{{ data.label.toUpperCase() }}</div>
       </template>
-      <!-- A virtual column -->
+
       <template v-slot:cell(index)="data">
         {{ data.index + 1 }}
       </template>
 
-      <!-- A custom formatted column -->
-      <template v-slot:cell(bank)="data">
-        {{ data.value }}
+      <template v-slot:cell(url)="data">
+        <center><img :src="data.value" class="img-fluid" alt="" /></center>
       </template>
 
-      <!-- A virtual composite column -->
-      <template v-slot:cell(country)="data">
-        {{ data.value }}
-      </template>
- <template v-slot:cell(delete)="data">
+      <template v-slot:cell(delete)="data">
         <center>
           <button
             class="btn btn-danger"
             v-b-modal.deleteModal
             v-on:click="deleteFunc(data.item)"
           >
-           <div v-if="deleting"><b-spinner variant="primary" label="Spinning"></b-spinner>
-</div>  <div v-else>delete</div>
+            delete
           </button>
         </center>
       </template>
-      <template v-slot:cell(url)="data">
-        <center><img :src="data.value" class="img-fluid" alt="" /></center>
-      </template>
-      <!-- <template v-slot:cell(ad)="data">
-        <bank-ad-dialog :bank="data.item.bank"></bank-ad-dialog>
-      </template> -->
-       <template v-slot:table-busy>
+
+      <template v-slot:table-busy>
         <div class="text-center text-danger my-2">
           <b-spinner class="align-middle"></b-spinner>
           <strong>Loading...</strong>
@@ -60,73 +50,120 @@
 
 <script>
 import Vue from "vue";
+import BankFormVue from "../components/BankForm.vue";
+import {
+  bankAdsCollection,
+  banksCollection,
+  db,
+  storage,
+  updateTimestamp,
+} from "../js/firebase";
 
-
-import BankFormVue from '../components/BankForm.vue';
-import { banksCollection, db,storage, updateTimestamp } from '../js/firebase';
-import BankAdDialogVue from '../components/BankAdDialog.vue';
+import BankAdDialogVue from "../components/BankAdDialog.vue";
+import { Page } from "../js/constants";
+import OtherAdFormVue from "../components/OtherAdForm.vue";
 
 export default {
-  name: "TableTemplate",
+  name: "Banks",
+  props: ["page"],
   created() {
-    banksCollection.onSnapshot((snap) => {
-      var banks = [];
-      if (!snap.empty) {
-        snap.forEach(async (doc) => {
-          this.isBusy=false
-          var data = doc.data();
-          data.id = doc.id;
-          var pathReference = `/bankcardgen/${data.bank
-            .toLowerCase()
-            .replace(/\s/g, "")}`;
-          await storage
-            .ref(pathReference + ".png")
+    var ref = "bankcardgen";
+    var Itemname = "bank";
+    var collection = banksCollection;
+
+    switch (this.page) {
+      case Page.banks:
+        collection = banksCollection;
+        var ref = "bankcardgen";
+        break;
+      case Page.bankAds:
+        collection = bankAdsCollection;
+        var ref = "bank_ads";
+        name = "name";
+        break;
+      case Page.OtherAds:
+        collection = bankAdsCollection;
+        var ref = "random_ads";
+        name = "name";
+        break;
+      default:
+        collection = banksCollection;
+    }
+
+    collection.onSnapshot((snap) => {
+      // Go for doc Changes
+      snap.docChanges().forEach(async (docChange) => {
+        var doc = docChange.doc;
+        var data = doc.data();
+        var oldIndex = docChange.oldIndex;
+        var newIndex = docChange.newIndex;
+        var err;
+
+        data.id = docChange.doc.id;
+        console.log(data.bank);
+        console.log(docChange);
+
+        const getDownloadURL = async () => {
+          var name = data[Itemname].toLowerCase().replace(/\s/g, "");
+
+          var downloadUrl = await storage
+            .ref(ref)
+            .child(name + ".png")
             .getDownloadURL()
-            .then((url) => {
-              data.url = url ?? "";
-            }).catch((e)=>{
-              console.log(e)
+            .catch((e) => {
+              console.log(e);
+              err = true;
             });
-          console.log(JSON.stringify(data));
-          banks.push(data);
-        });
-        this.banks=banks
-      }
+
+          return downloadUrl;
+        };
+
+        if (docChange.type == "added") {
+          var url = await getDownloadURL();
+          data.url = url;
+          this.banks.push(data);
+        } else if (docChange.type == "modified") {
+          if (oldIndex == newIndex) {
+            var url = await getDownloadURL();
+            data.url = url;
+            this.banks[docChange.newIndex] = data;
+          } else {
+            this.banks.splice(oldIndex, 1);
+            this.banks[newIndex] = data;
+          }
+        } else if (docChange.type == "removed") {
+          for (var i = 0; i < this.banks.length; i++) {
+            if (doc.id == this.banks[i].id) {
+              this.banks.splice(i, 1);
+            }
+          }
+        }
+      });
     });
   },
   components: {
-    
-    "bank-form-vue":BankFormVue,
-    "bank-ad-dialog":BankAdDialogVue
+    "bank-form-vue": BankFormVue,
+    "other-ad-form": OtherAdFormVue,
+    "bank-ad-form": BankFormVue,
   },
   data: () => ({
     fields: [
-      // A virtual column that doesn't exist in items
       { key: "index" },
-      // A column that needs custom formatting
       { key: "bank", sortable: true },
-      // A regular column
       { key: "country", sortable: true },
-      // A regular column
       { key: "url" },
-      { key: "ad" },
-      { key: "delete" }
+      { key: "delete" },
     ],
     banks: [],
     showDialog: null,
-    isBusy:true,
-    deleted:false,
-    deleting:false,
+    isBusy: null,
   }),
   methods: {
-    setBanks(banks) {
-      this.banks = banks;
-    },
-    rowListener(){
+    pushToBanks() {},
+    rowListener() {
       console.log("Clicked Row");
     },
     deleteFunc(item) {
-       this.deleting=true
       console.log(JSON.stringify(item));
       banksCollection
         .doc(item.id)
@@ -134,32 +171,27 @@ export default {
         .then(() => {
           storage
             .ref("bankcardgen")
-            .child(item.bank.toLowerCase().replace(/\s/g, "")+".png")
+            .child(item.bank.toLowerCase().replace(/\s/g, "") + ".png")
             .delete()
             .then(() => {
-              updateTimestamp()
+              updateTimestamp();
               console.log(
-                `deleted ${item.bank
-                  .toLowerCase()
-                  .replace(/\s/g, "")+".png"} from storage`
+                `deleted ${item.bank.toLowerCase().replace(/\s/g, "") +
+                  ".png"} from storage`
               );
-              this.deleting=false
             })
             .catch((e) => {
-              this.deleting=false
               console.log(e);
             });
         })
         .catch((e) => {
-          this.deleting=false
           console.log(e);
         });
     },
   },
-  
-  
 };
 </script>
+
 <style lang="scss" scoped>
 .table-header {
   text-align: center;
@@ -168,8 +200,8 @@ th {
   margin: 1rem;
 }
 @media only screen and (min-width: 600px) {
-.img-fluid{
-  width:50%;
-}
+  .img-fluid {
+    width: 50%;
+  }
 }
 </style>

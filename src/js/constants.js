@@ -249,4 +249,10 @@ export const countries=[
     "Zambia",
     "Zimbabwe",
     "Åland Islands",
-  ]
+  ];
+
+export const Page = {
+  banks:'banks',
+  bankAds:'bankAds',
+  OtherAds:'OtherAds'
+};

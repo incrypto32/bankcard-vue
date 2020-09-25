@@ -18,16 +18,15 @@
       <template v-slot:head()="data">
         <div class="table-header">{{ data.label.toUpperCase() }}</div>
       </template>
-      <!-- A virtual column -->
+
       <template v-slot:cell(index)="data">
         {{ data.index + 1 }}
       </template>
 
-      <!-- A virtual composite column -->
-
       <template v-slot:cell(ad)="data">
         <center><img :src="data.item.url" class="img-fluid" alt="" /></center>
       </template>
+
       <template v-slot:cell(delete)="data">
         <center>
           <button
@@ -35,14 +34,14 @@
             v-b-modal.deleteModal
             v-on:click="deleteFunc(data.item)"
           >
-           <div v-if="deleting"><b-spinner variant="primary" label="Spinning"></b-spinner>
-</div>  <div v-else>delete</div>
+            <div v-if="deleting">
+              <b-spinner variant="primary" label="Spinning"></b-spinner>
+            </div>
+            <div v-else>delete</div>
           </button>
         </center>
       </template>
-      <!-- <template v-slot:cell(ad)="data">
-        <bank-ad-dialog :bank="data.item.bank"></bank-ad-dialog>
-      </template> -->
+
       <template v-slot:table-busy>
         <div class="text-center text-danger my-2">
           <b-spinner class="align-middle"></b-spinner>
@@ -69,7 +68,7 @@ export default {
   name: "TableTemplate",
   created() {
     bankAdsCollection.onSnapshot((snap) => {
-      console.log("new Snap is here")
+      console.log("new Snap is here");
       var banks = [];
       if (!snap.empty) {
         snap.forEach(async (doc) => {
@@ -89,8 +88,8 @@ export default {
           banks.push(data);
         });
         this.banks = banks;
-      }else{
-        this.banks=[];
+      } else {
+        this.banks = [];
       }
     });
   },
@@ -111,7 +110,7 @@ export default {
     ],
     banks: [],
     delete: null,
-    deleting:false,
+    deleting: false,
     showDialog: null,
     isBusy: true,
   }),
@@ -130,14 +129,13 @@ export default {
         .then(() => {
           storage
             .ref("bank_ads")
-            .child(item.name.toLowerCase().replace(/\s/g, "")+".png")
+            .child(item.name.toLowerCase().replace(/\s/g, "") + ".png")
             .delete()
             .then(() => {
-              updateTimestamp()
+              updateTimestamp();
               console.log(
-                `deleted ${item.name
-                  .toLowerCase()
-                  .replace(/\s/g, "")+".png"} from storage`
+                `deleted ${item.name.toLowerCase().replace(/\s/g, "") +
+                  ".png"} from storage`
               );
             })
             .catch((e) => {

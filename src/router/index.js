@@ -16,7 +16,6 @@ Vue.use(VueRouter)
   {
     path: '/login',
     name: 'login',
-  
     component: () => import(/* webpackChunkName: "about" */ '../views/Login.vue'),
     meta:{nonAuth:true}
   },
@@ -29,13 +28,15 @@ Vue.use(VueRouter)
   {
     path: '/bankads',
     name: 'bankads',
-    component: () => import(/* webpackChunkName: "about" */ '../views/BankAds.vue'),
+    component: () => import(/* webpackChunkName: "about" */ '../views/OtherAds.vue'),
+    props:{isBankAd:true,heading:"Banks Ads"},
     meta:{requiresAuth:true}
   },
   {
     path: '/otherads',
     name: 'otherads',
     component: () => import(/* webpackChunkName: "about" */ '../views/OtherAds.vue'),
+    props:{isBankAd:false,heading:"Other Ads"},
     meta:{requiresAuth:true}
   },
  

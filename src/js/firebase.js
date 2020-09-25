@@ -22,8 +22,13 @@ firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
 // utils
 const db = firebase.firestore();
+db.enablePersistence().catch((e)=>{
+  console.log(e)
+})
+console.log("firestore persistance enabled");
 const auth = firebase.auth();
 const storage = firebase.storage();
+
 
 // collection references
 const banksCollection = db.collection("banks");
