@@ -20,6 +20,7 @@ export default {
         { name: "Manage Banks", route: "/banks" },
         { name: "Bank Ads", route: "/bankads" },
         { name: "Other Ads", route: "/otherads" },
+        { name: "Bank Requests", route: "/requests" },
       ],
     };
   },

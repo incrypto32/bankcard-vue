@@ -24,11 +24,26 @@
           label-for="input-2"
         >
           <b-form-input
-            id="input-1"
+            id="input-2"
             v-model="form.name"
             type="text"
             required
             placeholder="Enter Ad Name"
+          ></b-form-input>
+        </b-form-group>
+
+        <b-form-group
+         
+          id="input-group-3"
+          label="Ad Name :"
+          label-for="input-3"
+        >
+          <b-form-input
+            id="input-3"
+            v-model="form.link"
+            type="text"
+            required
+            placeholder="Enter Ad link"
           ></b-form-input>
         </b-form-group>
 
@@ -77,7 +92,7 @@ export default {
 
   created() {
     if (this.isBankAd) {
-      console.log("Created Called")
+      console.log("_____________________Created Called_______________________")
       banksCollection.get().then((snap) => {
         snap.forEach((doc) => {
           this.banks.push(doc.data().bank);
@@ -122,6 +137,7 @@ export default {
             .child(this.form.name.toLowerCase().replace(/\s/g, "") + ".png");
 
           var uploadTask = thisRef.put(this.file);
+        
 
           // Fires on each upload snapshots
           uploadTask.on(
@@ -140,8 +156,10 @@ export default {
             },
 
             // Fires on upload success
-            () => {
+            async () => {
+              
               console.log("Completed");
+              this.form.asset= await thisRef.getDownloadURL()
               collection.add(this.form).then(async (v) => {
                 var ts = await cachingDoc
                   .update({
@@ -166,6 +184,7 @@ export default {
       // Reset our form values
       this.form.name = "";
       this.file = null;
+      this.form.link="";
       this.err = null;
       this.uploadProgress = null;
       // Trick to reset/clear native browser form validation state

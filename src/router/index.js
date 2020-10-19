@@ -39,6 +39,13 @@ Vue.use(VueRouter)
     props:{isBankAd:false,heading:"Other Ads"},
     meta:{requiresAuth:true}
   },
+  {
+    path: '/requests',
+    name: 'requests',
+    component: () => import(/* webpackChunkName: "about" */ '../views/Requests.vue'),
+    props:{isBankAd:false,heading:"Other Ads"},
+    meta:{requiresAuth:true}
+  },
  
 ]
 

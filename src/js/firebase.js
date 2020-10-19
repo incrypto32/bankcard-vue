@@ -34,8 +34,9 @@ const storage = firebase.storage();
 const banksCollection = db.collection("banks");
 const bankAdsCollection = db.collection("bank_ads");
 const otherAdsCollection = db.collection("random_ads");
+const requestsCollection = db.collection("requests");
 const metaDataCollection = db.collection('metadata')
 const cachingDoc = metaDataCollection.doc('caching')
 const updateTimestamp= async () => await metaDataCollection.doc('caching').update({lud:firebase.firestore.FieldValue.serverTimestamp()})
 // export utils/refs
-export { firebase,db, auth, storage, banksCollection,metaDataCollection, bankAdsCollection,otherAdsCollection,cachingDoc, updateTimestamp};
+export { firebase,db, auth, storage, banksCollection,metaDataCollection, bankAdsCollection,otherAdsCollection,cachingDoc, updateTimestamp,requestsCollection};
